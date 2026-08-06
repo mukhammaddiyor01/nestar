@@ -1,0 +1,9 @@
+{
+	"typescript.suggest.autoImports": true,
+	"typescript.preferences.includePackageJsonAutoImports": "auto",
+	"editor.quickSuggestions": {
+		"other": true,
+		"comments": false,
+		"strings": false
+	}
+}
