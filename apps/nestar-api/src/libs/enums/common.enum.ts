@@ -6,6 +6,7 @@ export enum Message {
 	REMOVE_FAILED = 'Remove failed!',
 	BAD_REQUEST = 'Bad Request',
 
+	USED_MEMBER_NICK_OR_PHONE = 'Already used member nick or phone!',
 	USED_NICK_PHONE = 'You are inserting already used nick or phone!',
 	TOKEN_CREATION_FAILED = 'Token creation error!',
 	NO_MEMBER_NICK = 'no member with that member nick!',
