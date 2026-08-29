@@ -16,8 +16,8 @@ import { T } from '../../libs/types/common';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { StatisticModifier } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
-import { PropertyUpdate } from '../../libs/dto/property/property.updates';
-import moment from 'moment';
+import { PropertyUpdate } from '../../libs/dto/property/property.update';
+import moment = require('moment');
 import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 
 @Injectable()
@@ -219,5 +219,31 @@ export class PropertyService {
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		return result[0];
+	}
+
+	public async updatePropertyByAdmin(input: PropertyUpdate): Promise<Property> {
+		let { propertyStatus, soldAt, deletedAt } = input;
+		const search: T = {
+			_id: input._id,
+			propertyStatus: PropertyStatus.ACTIVE,
+		};
+		if (propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
+		else if (propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
+
+		const result = await this.propertyModel
+			.findByIdAndUpdate(search, input, {
+				new: true,
+			})
+			.exec();
+		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+		if (soldAt || deletedAt) {
+			await this.memberService.memberStatusEditor({
+				_id: result.memberId,
+				targetKey: 'memberProperties',
+				modifier: -1,
+			});
+		}
+		return result;
 	}
 }
