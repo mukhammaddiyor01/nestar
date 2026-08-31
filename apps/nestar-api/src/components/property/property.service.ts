@@ -75,20 +75,20 @@ export class PropertyService {
 	}
 
 	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
-		let { propertyStatus, soldAt, deletedAt } = input;
+		let { propertyStatus } = input;
 		const search: T = {
 			_id: input._id,
 			memberId: memberId,
 			propertyStatus: PropertyStatus.ACTIVE,
 		};
 
-		if (propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
-		else if (propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
+		if (propertyStatus === PropertyStatus.SOLD) input.soldAt = moment().toDate();
+		else if (propertyStatus === PropertyStatus.DELETE) input.deletedAt = moment().toDate();
 
 		const result = await this.propertyModel.findByIdAndUpdate(search, input, { new: true }).exec();
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
-		if (soldAt || deletedAt) {
+		if (input.soldAt || input.deletedAt) {
 			await this.memberService.memberStatusEditor({
 				_id: memberId,
 				targetKey: 'memberProperties',
