@@ -42,8 +42,8 @@ export class Property {
 	@Field(() => Int)
 	propertyLikes: number;
 
-	@Field(() => String)
-	propertyComments: String;
+	@Field(() => Int)
+	propertyComments: number;
 
 	@Field(() => Int)
 	propertyRank: number;
