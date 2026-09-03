@@ -51,8 +51,8 @@ export class FollowService {
 		});
 		if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		await this.memberService.memberStatusEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: 1 });
-		await this.memberService.memberStatusEditor({ _id: followingId, targetKey: 'memberFollowers', modifier: 1 });
+		await this.memberService.memberStatusEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: -1 });
+		await this.memberService.memberStatusEditor({ _id: followingId, targetKey: 'memberFollowers', modifier: -1 });
 		return result;
 	}
 
