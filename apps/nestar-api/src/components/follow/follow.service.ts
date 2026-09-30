@@ -50,10 +50,12 @@ export class FollowService {
 		const targetMember = await this.memberService.getMember(null, followingId);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		const result = await this.followModel.findOneAndDelete({
-			followingId: followingId,
-			followerid: followerId,
-		});
+		const result = await this.followModel
+			.findOneAndDelete({
+				followingId: followingId,
+				followerid: followerId,
+			})
+			.exec();
 		if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		await this.memberService.memberStatusEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: -1 });
