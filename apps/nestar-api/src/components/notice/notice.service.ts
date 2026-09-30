@@ -6,6 +6,8 @@ import { AllNoticesInquiry, NoticeInput } from '../../libs/dto/notice/notice.inp
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
 import { lookupMember } from '../../libs/config';
+import { NoticeUpdate } from '../../libs/dto/notice/notice.update';
+import { NoticeStatus } from '../../libs/enums/notice.enum';
 
 @Injectable()
 export class NoticeService {
@@ -50,5 +52,17 @@ export class NoticeService {
 			.exec();
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		return result[0];
+	}
+	public async updateNoticeByAdmin(input: NoticeUpdate): Promise<Notice> {
+		const { _id, ...update } = input;
+		const result = await this.noticeModel
+			.findOneAndUpdate(
+				{ _id, noticeStatus: { $in: [NoticeStatus.ACTIVE, NoticeStatus.HOLD] } },
+				{ $set: update },
+				{ new: true, runValidators: true },
+			)
+			.exec();
+		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+		return result;
 	}
 }

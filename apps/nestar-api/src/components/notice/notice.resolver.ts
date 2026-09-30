@@ -8,6 +8,8 @@ import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { NoticeService } from './notice.service';
+import { NoticeUpdate } from '../../libs/dto/notice/notice.update';
+import { shapeIntoMongoObjectId } from '../../libs/config';
 
 @Resolver()
 export class NoticeResolver {
@@ -28,5 +30,12 @@ export class NoticeResolver {
 	@Query(() => Notices)
 	public async getAllNoticesByAdmin(@Args('input') input: AllNoticesInquiry): Promise<Notices> {
 		return await this.noticeService.getAllNoticesByAdmin(input);
+	}
+	@Roles(MemberType.ADMIN)
+	@UseGuards(RolesGuard)
+	@Mutation(() => Notice)
+	public async updateNoticeByAdmin(@Args('input') input: NoticeUpdate): Promise<Notice> {
+		input._id = shapeIntoMongoObjectId(input._id);
+		return await this.noticeService.updateNoticeByAdmin(input);
 	}
 }
