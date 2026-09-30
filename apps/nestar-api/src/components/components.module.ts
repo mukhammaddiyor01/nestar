@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NoticeModule } from './notice/notice.module';
 import { MemberModule } from './member/member.module';
 import { PropertyModule } from './property/property.module';
 import { AuthModule } from './auth/auth.module';
@@ -10,6 +11,7 @@ import { BoardArticleModule } from './board-article/board-article.module';
 
 @Module({
 	imports: [
+		NoticeModule,
 		MemberModule,
 		AuthModule,
 		PropertyModule,
