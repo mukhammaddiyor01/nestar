@@ -1,6 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
-import { IsMongoId, Length, ValidateIf } from 'class-validator';
+import { IsEnum, IsMongoId, Length, ValidateIf } from 'class-validator';
 import { ObjectId } from 'mongoose';
 import { NoticeStatus } from '../../enums/notice.enum';
 
@@ -11,6 +11,7 @@ export class NoticeUpdate {
 	_id: ObjectId;
 
 	@ValidateIf((object, value) => value !== undefined)
+	@IsEnum(NoticeStatus)
 	@Field(() => NoticeStatus, { nullable: true })
 	noticeStatus?: NoticeStatus;
 
