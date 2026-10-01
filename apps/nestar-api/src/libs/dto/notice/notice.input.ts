@@ -22,6 +22,51 @@ export class NoticeInput {
 }
 
 @InputType()
+export class PublicNoticesInquiry {
+	@IsInt()
+	@Min(1)
+	@Field(() => Int)
+	page: number;
+
+	@IsInt()
+	@Min(1)
+	@Max(100)
+	@Field(() => Int)
+	limit: number;
+
+	@IsIn([NoticeCategory.NOTICE, NoticeCategory.FAQ])
+	@Field(() => NoticeCategory)
+	noticeCategory: NoticeCategory;
+}
+
+@InputType()
+export class InquiriesInquiry {
+	@IsInt()
+	@Min(1)
+	@Field(() => Int)
+	page: number;
+
+	@IsInt()
+	@Min(1)
+	@Max(100)
+	@Field(() => Int)
+	limit: number;
+}
+
+@InputType()
+export class InquiryInput {
+	@Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+	@Length(3, 100)
+	@Field(() => String)
+	noticeTitle: string;
+
+	@Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+	@Length(3, 10000)
+	@Field(() => String)
+	noticeContent: string;
+}
+
+@InputType()
 export class ANISearch {
 	@IsOptional()
 	@Field(() => NoticeCategory, { nullable: true })

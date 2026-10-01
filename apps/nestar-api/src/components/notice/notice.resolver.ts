@@ -2,11 +2,12 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import { isValidObjectId, ObjectId } from 'mongoose';
 import { Notice, Notices } from '../../libs/dto/notice/notice';
-import { AllNoticesInquiry, NoticeInput } from '../../libs/dto/notice/notice.input';
+import { AllNoticesInquiry, InquiriesInquiry, InquiryInput, NoticeInput, PublicNoticesInquiry } from '../../libs/dto/notice/notice.input';
 import { MemberType } from '../../libs/enums/member.enum';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AuthGuard } from '../auth/guards/auth.guard';
 import { NoticeService } from './notice.service';
 import { Message } from '../../libs/enums/common.enum';
 import { NoticeUpdate } from '../../libs/dto/notice/notice.update';
@@ -15,6 +16,29 @@ import { shapeIntoMongoObjectId } from '../../libs/config';
 @Resolver()
 export class NoticeResolver {
 	constructor(private readonly noticeService: NoticeService) {}
+
+	@Query(() => Notices)
+	public async getNotices(@Args('input') input: PublicNoticesInquiry): Promise<Notices> {
+		return this.noticeService.getNotices(input);
+	}
+
+	@UseGuards(AuthGuard)
+	@Query(() => Notices)
+	public async getMyInquiries(
+		@Args('input') input: InquiriesInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Notices> {
+		return this.noticeService.getMyInquiries(memberId, input);
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation(() => Notice)
+	public async createInquiry(
+		@Args('input') input: InquiryInput,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Notice> {
+		return this.noticeService.createInquiry(memberId, input);
+	}
 
 	@Roles(MemberType.ADMIN)
 	@UseGuards(RolesGuard)

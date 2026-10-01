@@ -6,11 +6,12 @@ import { Model, Types } from 'mongoose';
 import { NoticeService } from './notice.service';
 import { NoticeResolver } from './notice.resolver';
 import { Notice } from '../../libs/dto/notice/notice';
-import { NoticeInput, AllNoticesInquiry } from '../../libs/dto/notice/notice.input';
+import { NoticeInput, AllNoticesInquiry, PublicNoticesInquiry } from '../../libs/dto/notice/notice.input';
 import { NoticeUpdate } from '../../libs/dto/notice/notice.update';
 import { NoticeCategory, NoticeStatus } from '../../libs/enums/notice.enum';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AuthGuard } from '../auth/guards/auth.guard';
 import { Direction } from '../../libs/enums/common.enum';
 
 const id = new Types.ObjectId() as any;
@@ -43,6 +44,23 @@ test.each(['createNoticeByAdmin', 'getAllNoticesByAdmin', 'updateNoticeByAdmin',
 		expect(Reflect.getMetadata(GUARDS_METADATA, handler)).toContain(RolesGuard);
 	},
 );
+
+test('public listing only exposes active notices and FAQs', async () => {
+	await service.getNotices({ page: 1, limit: 10, noticeCategory: NoticeCategory.FAQ });
+	expect(model.aggregate.mock.calls[0][0][0].$match).toEqual({ noticeCategory: NoticeCategory.FAQ, noticeStatus: NoticeStatus.ACTIVE });
+	model.aggregate.mockClear();
+	await expect(service.getNotices({ page: 1, limit: 10, noticeCategory: NoticeCategory.INQUIRY } as PublicNoticesInquiry)).rejects.toThrow();
+	expect(model.aggregate).not.toHaveBeenCalled();
+});
+
+test('inquiries are authored by the signed-in member and only listed for that member', async () => {
+	expect(Reflect.getMetadata(GUARDS_METADATA, NoticeResolver.prototype.createInquiry)).toContain(AuthGuard);
+	expect(Reflect.getMetadata(GUARDS_METADATA, NoticeResolver.prototype.getMyInquiries)).toContain(AuthGuard);
+	await service.createInquiry(id, { noticeTitle: 'Question', noticeContent: 'Details' });
+	expect(model.create).toHaveBeenCalledWith({ noticeTitle: 'Question', noticeContent: 'Details', memberId: id, noticeCategory: NoticeCategory.INQUIRY, noticeStatus: NoticeStatus.HOLD });
+	await service.getMyInquiries(id, { page: 1, limit: 10 });
+	expect(model.aggregate.mock.calls[0][0][0].$match).toEqual({ noticeCategory: NoticeCategory.INQUIRY, memberId: id });
+});
 
 test('creation assigns the authenticated author and reports persistence failure', async () => {
 	const input = { noticeCategory: NoticeCategory.FAQ, noticeTitle: 'Question', noticeContent: 'Answer' };

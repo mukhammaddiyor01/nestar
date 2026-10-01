@@ -24,6 +24,10 @@ const NoticeSchema = new Schema(
 			type: String,
 			required: true,
 		},
+
+		noticeAnswer: {
+			type: String,
+		},
 		
 		memberId: {
 			type: Schema.Types.ObjectId,

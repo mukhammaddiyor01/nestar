@@ -1,13 +1,13 @@
-import { BadGatewayException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { Notice, Notices } from '../../libs/dto/notice/notice';
-import { AllNoticesInquiry, NoticeInput } from '../../libs/dto/notice/notice.input';
+import { AllNoticesInquiry, InquiriesInquiry, InquiryInput, NoticeInput, PublicNoticesInquiry } from '../../libs/dto/notice/notice.input';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
 import { lookupMember } from '../../libs/config';
 import { NoticeUpdate } from '../../libs/dto/notice/notice.update';
-import { NoticeStatus } from '../../libs/enums/notice.enum';
+import { NoticeCategory, NoticeStatus } from '../../libs/enums/notice.enum';
 
 @Injectable()
 export class NoticeService {
@@ -19,6 +19,39 @@ export class NoticeService {
 		} catch (err) {
 			throw new BadGatewayException(Message.CREATE_FAILED);
 		}
+	}
+
+	public async createInquiry(memberId: ObjectId, input: InquiryInput): Promise<Notice> {
+		try {
+			return await this.noticeModel.create({
+				...input,
+				memberId,
+				noticeCategory: NoticeCategory.INQUIRY,
+				noticeStatus: NoticeStatus.HOLD,
+			});
+		} catch (err) {
+			throw new BadGatewayException(Message.CREATE_FAILED);
+		}
+	}
+
+	public async getNotices(input: PublicNoticesInquiry): Promise<Notices> {
+		if (![NoticeCategory.NOTICE, NoticeCategory.FAQ].includes(input.noticeCategory))
+			throw new BadRequestException(Message.BAD_REQUEST);
+		return this.listNotices(
+			{ noticeCategory: input.noticeCategory, noticeStatus: NoticeStatus.ACTIVE },
+			input.page,
+			input.limit,
+			{ createdAt: Direction.DESC, _id: Direction.DESC },
+		);
+	}
+
+	public async getMyInquiries(memberId: ObjectId, input: InquiriesInquiry): Promise<Notices> {
+		return this.listNotices(
+			{ noticeCategory: NoticeCategory.INQUIRY, memberId },
+			input.page,
+			input.limit,
+			{ createdAt: Direction.DESC, _id: Direction.DESC },
+		);
 	}
 
 	public async getAllNoticesByAdmin(input: AllNoticesInquiry): Promise<Notices> {
@@ -33,6 +66,10 @@ export class NoticeService {
 		if (text?.trim())
 			match.noticeTitle = { $regex: new RegExp(text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') };
 
+		return this.listNotices(match, input.page, input.limit, sort);
+	}
+
+	private async listNotices(match: T, page: number, limit: number, sort: T): Promise<Notices> {
 		const result = await this.noticeModel
 			.aggregate([
 				{ $match: match },
@@ -40,8 +77,8 @@ export class NoticeService {
 				{
 					$facet: {
 						list: [
-							{ $skip: (input.page - 1) * input.limit },
-							{ $limit: input.limit },
+							{ $skip: (page - 1) * limit },
+							{ $limit: limit },
 							lookupMember,
 							{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
 						],

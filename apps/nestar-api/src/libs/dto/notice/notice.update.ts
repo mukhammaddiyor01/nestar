@@ -26,4 +26,10 @@ export class NoticeUpdate {
 	@Length(3, 10000)
 	@Field(() => String, { nullable: true })
 	noticeContent?: string;
+
+	@ValidateIf((object, value) => value !== undefined)
+	@Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+	@Length(3, 10000)
+	@Field(() => String, { nullable: true })
+	noticeAnswer?: string;
 }

@@ -20,6 +20,9 @@ export class Notice {
 	@Field(() => String)
 	noticeContent: string;
 
+	@Field(() => String, { nullable: true })
+	noticeAnswer?: string;
+
 	@Field(() => String)
 	memberId: ObjectId;
 
